@@ -10,7 +10,6 @@ sudo apt-get clean || exit 1
 
 echo "Moving files to trash bin"
 gio trash -f \
-~/.adobe/Flash_Player/AssetCache/* \
 ~/.aliensh_history \
 ~/.bash_history \
 ~/.cache/doublecmd/thumbnails/* \
@@ -18,19 +17,21 @@ gio trash -f \
 ~/.cache/thumbnails/*/*.png \
 ~/.cache/thumbnails/*/*/*.png \
 ~/.config/xnviewmp/XnView.db \
-~/core \
-~/.gnuplot_history \
-~/kdenlive/thumbs \
-~/.kde/share/apps/okular/docdata/* \
-~/.kde/share/apps/RecentDocuments/* \
 ~/.lesshst \
-~/.wget-hsts \
+~/.local/share/okular/docdata/* \
+~/.local/share/RecentDocuments/* \
 ~/.nano_history \
 ~/.python_history \
 ~/.root_hist \
-~/.thumbnails/*/*.png \
-~/.thumbnails/*/*/*.png \
-~/.vidyo/VidyoDesktop/VidyoDesktop_*.log \
+~/.wget-hsts \
+~/core \
 || exit 1
 
-exit 0
+# Obsolete paths
+
+# ~/.adobe/Flash_Player/AssetCache/* \
+# ~/.gnuplot_history \
+# ~/.thumbnails/*/*.png \
+# ~/.thumbnails/*/*/*.png \
+# ~/.vidyo/VidyoDesktop/VidyoDesktop_*.log \
+# ~/kdenlive/thumbs \
