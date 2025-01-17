@@ -7,9 +7,9 @@ FileName=$(echo $1 | cut -f 1 -d .) # this should work on Linux and Mac OS X
 echo "Cleaning"
 "$(dirname $(realpath $0))"/latex-clean.sh
 
-if [ "${FileName}" ] || { echo "Please provide path to your LaTeX source file."; exit 1; }
+[ "${FileName}" ] || { echo "Please provide path to your LaTeX source file."; exit 1; }
 
-if [ -f "${FileName}.tex" ] || { echo "There is no file ${FileName}.tex"; exit 1; }
+[ -f "${FileName}.tex" ] || { echo "There is no file ${FileName}.tex"; exit 1; }
 
 echo "Processing file ${FileName}.tex"
 
