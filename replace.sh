@@ -6,5 +6,5 @@ old=$1
 new=$2
 file=$3
 
-sed -e "s/${old}/${new}/g" ${file} > ${file}.tmp && mv ${file}.tmp ${file}
+sed -e "s/${old}/${new}/g" "${file}" > "${file}.tmp" && mv "${file}.tmp" "${file}"
 exit 0
