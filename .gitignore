@@ -1,0 +1,3 @@
+*.log
+megalinter-reports/
+.DS_Store
