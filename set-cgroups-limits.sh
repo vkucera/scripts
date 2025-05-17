@@ -8,7 +8,7 @@ set -euo pipefail
 device="$(hostname)"
 case "$device" in
   "alicecerno2")
-    versionCGroups=1
+    versionCGroups=2
     ramMax=770690780160
     cpuMax=9500000
     ioWriteMax=660602880

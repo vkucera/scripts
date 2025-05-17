@@ -3,6 +3,8 @@
 # Backup information about system configuration and programs settings.
 # 2020-10-04
 
+# shellcheck disable=SC2024
+
 # Set bash strict mode.
 set -euo pipefail
 
@@ -18,7 +20,7 @@ ErrExit() { echo "Error"; exit 1; }
 echo "Backing up configuration and settings"
 echo "Output directory: ${TargetPath}"
 
-[ -f "$PathDotFile" ] || { echo "File $PathDotFile does not exist."; ErrExit; }
+[[ -f "$PathDotFile" ]] || { echo "File $PathDotFile does not exist."; ErrExit; }
 
 # Create output directory and delete its potential content.
 mkdir -p "$TargetPath"
@@ -27,7 +29,7 @@ rm -rf "${TargetPath:?}"/*
 
 # Initialise a Git repository if not present.
 cd "$TargetPath"
-git branch > /dev/null 2>&1 || git init
+( git branch > /dev/null 2>&1 || git init )
 
 # System
 echo "System"
@@ -71,18 +73,23 @@ dpkg -l  > "${TargetPath}"/packages/dpkg-programs.txt
 cp -p /etc/apt/sources.list "${TargetPath}"/packages
 cp -pr /etc/apt/sources.list.d "${TargetPath}"/packages/
 #sudo apt-key exportall > "${TargetPath}"/packages/repositories.keys
-grep -RoPish "ppa.launchpad.net/[^/]+/[^/ ]+" /etc/apt | sort -u | sed -r 's/\.[^/]+\//:/' > "${TargetPath}"/packages/ppa.txt
+# grep -RoPish "ppa.launchpad.net/[^/]+/[^/ ]+" /etc/apt | sort -u | sed -r 's/\.[^/]+\//:/' > "${TargetPath}"/packages/ppa.txt
+"$DirThis/list-third-party-packages.sh" > "${TargetPath}"/packages/third-party-packages.txt
 # Snap packages
-[ -n "$(which snap)" ] && snap list > "${TargetPath}"/packages/snap.txt
+[[ -n "$(which snap)" ]] && { snap list > "${TargetPath}"/packages/snap.txt; }
 
 # Network connections
 echo "Network connections"
-mkdir "${TargetPath}"/network
-sudo cp -rp /etc/NetworkManager/system-connections "${TargetPath}"/network
+if [[ -d "/etc/NetworkManager" ]]; then
+  mkdir "${TargetPath}"/network
+  sudo cp -rp /etc/NetworkManager/system-connections "${TargetPath}"/network
+else
+  echo "- No network connection settings found"
+fi
 
 # Printer settings
 echo "Printer settings"
-if [ -f /etc/cups/printers.conf ]; then
+if [[ -f /etc/cups/printers.conf ]]; then
   mkdir "${TargetPath}"/printers
   sudo cp -p /etc/cups/printers.conf "${TargetPath}"/printers
 else
@@ -93,12 +100,12 @@ fi
 echo "Programs settings"
 IFS=$'\n' # needed to avoid splitting strings with spaces
 mkdir "${TargetPath}"/programs
-for i in $(cat $PathDotFile); do
+while read -r i; do
   DirI="$(dirname "${i}")"
   DirITarget="${TargetPath}/programs/$DirI"
   mkdir -p "$DirITarget"
   cp -rp "$HOME/${i}" "$DirITarget"
-done
+done < "$PathDotFile"
 unset IFS
 
 # Firefox data
