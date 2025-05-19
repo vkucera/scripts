@@ -83,7 +83,7 @@ cp -pr /etc/apt/sources.list.d "${TargetPath}"/packages/
 
 # Network connections
 echo "Network connections"
-if [[ -d "/etc/NetworkManager" ]]; then
+if [[ -f "/etc/NetworkManager/system-connections" ]]; then
   mkdir "${TargetPath}"/network
   sudo cp -rp /etc/NetworkManager/system-connections "${TargetPath}"/network
 else
