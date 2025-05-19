@@ -42,8 +42,8 @@ uname -a > "${TargetPath}"/system/uname.txt
 hostnamectl > "${TargetPath}"/system/hostnamectl.txt
 sudo dmidecode -q > "${TargetPath}"/system/bios.txt
 sudo lshw -short > "${TargetPath}"/system/hw.txt
-lspci > "${TargetPath}"/system/pci.txt
 sudo lshw -html > "${TargetPath}"/system/hw.html
+lspci > "${TargetPath}"/system/pci.txt
 #ifconfig -a | grep HWadr > "${TargetPath}"/system/mac.txt
 inxi -Fxxxc0 > "${TargetPath}"/system/inxi.txt
 
@@ -62,6 +62,8 @@ mount | column -t > "${TargetPath}"/disk/mount.txt
 cp -p /proc/partitions "${TargetPath}"/disk
 cp -p /proc/swaps "${TargetPath}"/disk
 lsblk > "${TargetPath}"/disk/lsblk.txt
+ls -l /dev/disk/* > "${TargetPath}"/disk/dev.txt
+cp -p /etc/default/grub "${TargetPath}"/disk
 #sudo hdparm -i /dev/sda > "${TargetPath}"/disk/hdparm.txt
 
 # Packages
@@ -69,6 +71,7 @@ echo "Packages"
 mkdir "${TargetPath}"/packages
 dpkg --get-selections > "${TargetPath}"/packages/dpkg-selections.txt
 dpkg -l  > "${TargetPath}"/packages/dpkg-programs.txt
+cp -p /var/cache/debconf/config.dat "${TargetPath}"/packages/
 # PPA repositories
 cp -p /etc/apt/sources.list "${TargetPath}"/packages
 cp -pr /etc/apt/sources.list.d "${TargetPath}"/packages/
