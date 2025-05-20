@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# List packages installed from non-standard repositories
+# List packages installed from third-party repositories
 
 array_contains() {
     local array="$1[@]"
@@ -18,7 +18,7 @@ array_contains() {
 readarray -t installed < <(dpkg --get-selections | grep -v deinstall | awk '{ print $1 }')
 
 # Get list of repository lists
-lists="$(find /var/lib/apt/lists/*_Packages  ! -name "*.ubuntu.com*")"
+lists="$(find /var/lib/apt/lists/*_Packages ! \( -name "*.ubuntu.com_ubuntu_*" -o -name "*.canonical.com_ubuntu_*" -o -name "*mirror.*_ubuntu_*" -o -name "*mirror.*_linuxmint_*" \))"
 
 for list in $lists; do
     echo "==== $list"
