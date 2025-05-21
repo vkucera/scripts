@@ -36,7 +36,7 @@ builds() {
 # $1 is a path to an sw directory.
 builds-size() {
   [ "$1" ] || { echo "Provide a path to an sw directory"; return; }
-  for f in "$1"/ubuntu2004_x86-64/*/; do
+  for f in "$1"/ubuntu2404_x86-64/*/; do
     echo "$(du -s --si "$f") $(find "$f" -mindepth 1 -maxdepth 1 -type d | wc -l) ";
   done | grep -v " 1 " | sort -h
 }
@@ -45,7 +45,7 @@ builds-size() {
 # $1 is a path to an sw directory.
 builds-number() {
   [ "$1" ] || { echo "Provide a path to an sw directory"; return; }
-  for f in "$1"/ubuntu2004_x86-64/*/; do
+  for f in "$1"/ubuntu2404_x86-64/*/; do
     echo "$(find "$f" -mindepth 1 -maxdepth 1 -type d | wc -l) $f"
   done | grep -v "1 " | sort -h
 }
