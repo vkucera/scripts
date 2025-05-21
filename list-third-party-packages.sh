@@ -30,5 +30,7 @@ for list in $lists; do
         if array_contains installed "$p"; then
             echo "$p"
         fi
+        # https://documentation.ubuntu.com/server/explanation/software/third-party-repository-usage/
+        # dpkg-query -W -f='${binary:Package}\t${db:Status-Abbrev}\n' "$p" 2> /dev/null | awk '/\tii $/{print $1}'
     done
 done
