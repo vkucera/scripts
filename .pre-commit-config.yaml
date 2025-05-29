@@ -23,13 +23,13 @@ repos:
       - id: requirements-txt-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.10 # ruff version
+    rev: v0.11.11 # ruff version
     hooks:
       - id: ruff-check # linter
         args: ["--fix"]
       - id: ruff-format # formatter
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.16.0
     hooks:
       - id: pyupgrade
         args: ["--py310-plus"]
@@ -42,14 +42,23 @@ repos:
     hooks:
       - id: yamlfmt
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.1
+    rev: v1.35.1
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v20.1.4 # clang-format version
+    rev: v20.1.5 # clang-format version
     hooks:
       - id: clang-format
   - repo: https://github.com/cpplint/cpplint
-    rev: 2.0.2
+    rev: 2.0.1
     hooks:
       - id: cpplint
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: v3.13.7
+    hooks:
+      - id: markdown-link-check
+        args: [-q]
