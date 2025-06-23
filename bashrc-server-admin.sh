@@ -73,3 +73,14 @@ inactive-users-size() {
   cd /home && sudo du -sc --si "${list_users[@]}" | sort -h
   cd - || exit
 }
+
+# Get the number of processes per user and open htop for each user.
+get-user-processes() {
+  for u in $(get-users); do
+    n=$(ps -u "$u" -o user | wc -l)
+    if [[ $n -gt 1 ]]; then
+      echo "$u $((n - 1))"
+      htop -u "$u"
+    fi
+  done
+}
