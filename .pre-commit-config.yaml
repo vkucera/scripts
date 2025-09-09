@@ -11,21 +11,24 @@ repos:
       - id: check-builtin-literals
       - id: check-docstring-first
       - id: check-executables-have-shebangs
+      - id: check-json
       - id: check-merge-conflict
       - id: check-symlinks
-      - id: check-json
       - id: check-toml
       - id: check-yaml
+        args: [--allow-multiple-documents]
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: name-tests-test
+      - id: pretty-format-json
+        args: [--autofix, --no-ensure-ascii, --indent, "4"]
       - id: requirements-txt-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.12 # ruff version
     hooks:
-      - id: ruff-check # linter
+      - id: ruff # linter
         args: ["--fix"]
       - id: ruff-format # formatter
   - repo: https://github.com/asottile/pyupgrade
