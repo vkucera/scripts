@@ -40,6 +40,7 @@ cp -p /proc/cpuinfo "${TargetPath}"/system
 #cp -p /etc/issue "${TargetPath}"/system
 uname -a > "${TargetPath}"/system/uname.txt
 hostnamectl > "${TargetPath}"/system/hostnamectl.txt
+cp -p /etc/os-release "${TargetPath}"/system
 sudo dmidecode -q > "${TargetPath}"/system/bios.txt
 sudo lshw -short > "${TargetPath}"/system/hw.txt
 sudo lshw -html > "${TargetPath}"/system/hw.html
