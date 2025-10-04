@@ -17,8 +17,18 @@ array_contains() {
 # shellcheck disable=SC2034
 readarray -t installed < <(dpkg --get-selections | grep -v deinstall | awk '{print $1}')
 
-# Get URLs of official repos
-mapfile -t urls_official < <(awk '{print $2}' /etc/apt/sources.list.d/official-package-repositories.list | sort -u | grep ^http | cut -d/ -f3)
+# Get the distro name and URLs of official repos.
+name_distro="$(grep ^DISTRIB_ID /etc/lsb-release | cut -d= -f2)"
+case "${name_distro}" in
+    "LinuxMint")
+        file_repos="/etc/apt/sources.list.d/official-package-repositories.list"
+        mapfile -t urls_official < <(awk '{print $2}' "${file_repos}" | sort -u | grep ^http | cut -d/ -f3)
+        ;;
+    "Ubuntu")
+        file_repos="/etc/apt/sources.list.d/ubuntu.sources"
+        mapfile -t urls_official < <(awk '$1 == "URIs:" {print $2}' ${file_repos} | sort -u | grep ^http | cut -d/ -f3)
+        ;;
+esac
 
 # Get list of repository lists
 mapfile -t lists < <(find /var/lib/apt/lists/*_Packages)
