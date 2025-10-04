@@ -12,7 +12,7 @@ export PATH="$PYTHONUSERBASE/bin:$PATH"
 alias q='exit'
 alias time='/usr/bin/time -f "time real: %E\ntime real: %e s\ntime kernel: %S s\ntime user: %U s\nCPU: %P\nMemory (max): %M kB\nExit code: %x"'
 alias htopme='htop -u $USER'
-alias du='du --si'
+alias du-si='du --si'
 
 # utils
 
