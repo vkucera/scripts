@@ -83,12 +83,14 @@ cp -pr /etc/apt/sources.list.d "${TargetPath}"/packages/
 
 # Network connections
 echo "Network connections"
-if [[ -f "/etc/NetworkManager/system-connections" ]]; then
-  mkdir "${TargetPath}"/network
-  sudo cp -rp /etc/NetworkManager/system-connections "${TargetPath}"/network
+for dir in "etc" "run"; do
+if [[ -d "/$dir/NetworkManager/system-connections" ]]; then
+  mkdir -p "${TargetPath}"/network/"$dir"
+  sudo cp -rp /$dir/NetworkManager/system-connections "${TargetPath}"/network/"$dir"
 else
-  echo "- No network connection settings found"
+  echo "- No $dir network connection settings found"
 fi
+done
 
 # Printer settings
 echo "Printer settings"
