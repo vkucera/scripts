@@ -15,12 +15,28 @@ array_contains() {
 
 # Get list of installed packages
 # shellcheck disable=SC2034
-readarray -t installed < <(dpkg --get-selections | grep -v deinstall | awk '{ print $1 }')
+readarray -t installed < <(dpkg --get-selections | grep -v deinstall | awk '{print $1}')
+
+# Get URLs of official repos
+mapfile -t urls_official < <(awk '{print $2}' /etc/apt/sources.list.d/official-package-repositories.list | sort -u | grep ^http | cut -d/ -f3)
 
 # Get list of repository lists
-lists="$(find /var/lib/apt/lists/*_Packages ! \( -name "*.ubuntu.com_ubuntu_*" -o -name "*.canonical.com_ubuntu_*" -o -name "*mirror.*_ubuntu_*" -o -name "*mirror.*_linuxmint_*" \))"
+mapfile -t lists < <(find /var/lib/apt/lists/*_Packages)
 
-for list in $lists; do
+for list in "${lists[@]}"; do
+    skip=0
+    # Exclude official repos.
+    for url in "${urls_official[@]}"; do
+        # echo "Checking if $url is in $list"
+        if [[ "$list" == *"$url"* ]]; then
+            skip=1
+            break
+        fi
+    done
+    if [[ $skip -eq 1 ]]; then
+        # echo Skipping
+        continue
+    fi
     echo "==== $list"
     # Get list of packages in a given repository
     packages="$(grep ^Package "$list" | awk '{print $2}' | sort -u)"
