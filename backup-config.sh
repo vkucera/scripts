@@ -110,11 +110,16 @@ echo "Programs settings"
 TargetPathFull="${TargetPath}"/programs
 mkdir "$TargetPathFull"
 IFS=$'\n' # needed to avoid splitting strings with spaces
-while read -r i; do
-  DirI="$(dirname "${i}")"
+cp -rp "$PathDotFile" "${TargetPath}"/programs
+while read -r line; do
+  # Skip empty lines and lines starting with "#".
+  if [[ -z "$line" || "${line:0:1}" == "#" ]]; then
+    continue
+  fi
+  DirI="$(dirname "${line}")"
   DirITarget="$TargetPathFull"/"$DirI"
   mkdir -p "$DirITarget"
-  cp -rp "$HOME/${i}" "$DirITarget"
+  cp -rp "$HOME/${line}" "$DirITarget"
 done < "$PathDotFile"
 unset IFS
 
