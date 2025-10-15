@@ -2,30 +2,39 @@
 
 # Delete temporary files.
 
+# Set bash strict mode.
+set -euo pipefail
+
 echo "Running autoremove"
-sudo apt-get autoremove || exit 1
+sudo apt autoremove
 
 echo "Running clean"
-sudo apt-get clean || exit 1
+sudo apt clean
 
 echo "Moving files to trash bin"
 gio trash -f \
-~/.aliensh_history \
-~/.bash_history \
-~/.cache/doublecmd/thumbnails/* \
-~/.cache/mintinstall/screenshots/* \
-~/.cache/thumbnails/*/*.png \
-~/.cache/thumbnails/*/*/*.png \
-~/.config/xnviewmp/XnView.db \
-~/.lesshst \
-~/.local/share/okular/docdata/* \
-~/.local/share/RecentDocuments/* \
-~/.nano_history \
-~/.python_history \
-~/.root_hist \
-~/.wget-hsts \
-~/core \
-|| exit 1
+"$HOME"/.aliensh_history \
+"$HOME"/.bash_history \
+"$HOME"/.cache/doublecmd/thumbnails/* \
+"$HOME"/.cache/mintinstall/screenshots/* \
+"$HOME"/.cache/thumbnails/*/*.png \
+"$HOME"/.cache/thumbnails/*/*/*.png \
+"$HOME"/.config/session/* \
+"$HOME"/.config/xnviewmp/*log* \
+"$HOME"/.config/xnviewmp/XnView.db \
+"$HOME"/.lesshst \
+"$HOME"/.local/share/Hardcoded\ Software/dupeGuru/cached_pictures.db \
+"$HOME"/.local/share/Hardcoded\ Software/dupeGuru/debug.log \
+"$HOME"/.local/share/Hardcoded\ Software/dupeGuru/hash_cache.db \
+"$HOME"/.local/share/Hardcoded\ Software/dupeGuru/last_directories.xml \
+"$HOME"/.local/share/okular/docdata/* \
+"$HOME"/.local/share/RecentDocuments/* \
+"$HOME"/.nano_history \
+"$HOME"/.python_history \
+"$HOME"/.root_hist \
+"$HOME"/.wget-hsts \
+"$HOME"/core \
+exit
 
 # Obsolete paths
 
