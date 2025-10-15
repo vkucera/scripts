@@ -23,6 +23,8 @@ grep Path "$FirefoxDir/profiles.ini" | cut -d= -f2 | while IFS= read -r Profile;
   # Bookmarks
   LastFile=$(find "$FirefoxDir/$Profile/bookmarkbackups/" -type f | sort | tail -1)
   [ "$LastFile" ] && cp -p "$LastFile" "$TargetDir/$Profile" || echo "No bookmarks found for profile $Profile."
+  # Extensions
+  find "$FirefoxDir/$Profile/extensions" -maxdepth 1 -name "*.xpi" -exec basename {} \; | sort > "$TargetDir/$Profile/extensions.txt"
 done
 unset IFS
 
