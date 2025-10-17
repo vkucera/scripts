@@ -74,6 +74,13 @@ inactive-users-size() {
   cd - || exit
 }
 
+# Show N processes taking the most memory.
+get-big-processes() {
+  n_proc=10
+  [ "$1" ] && { n_proc=$1; }
+  ps -e S -o user,pid,start,%cpu,%mem,rss,comm --sort=-rss | head -n $((n_proc + 1))
+}
+
 # Get the number of processes per user and open htop for each user.
 get-user-processes() {
   for u in $(get-users); do
@@ -89,11 +96,7 @@ get-user-processes() {
 get-user-memory() {
   [[ -z "$1" ]] && { echo "Provide username."; return 1; }
   user="$1"
-  m=0;
-  for i in $(ps S -u "$user" -o rss); do
-    m=$((m + i))
-  done
-  echo "$m"
+  ps S -U "$user" --no-headers -o rss | awk '{m+=$1} END{print m}'
 }
 
 # Get the estimate of memory taken by processes per user.
@@ -103,10 +106,23 @@ get-memory-per-user() {
   for u in $(ps -e --no-headers -o user | sort -u); do
     m=$(get-user-memory "$u")
     if [[ $m -gt 0 ]]; then
-      echo "$u $(echo "scale=3; $m/1024/1024" | bc) GB"
+      echo "$u $(echo "scale=3; $m/1048576" | bc) GiB"
       total=$((total + m))
     fi
   done
-  echo "total $(echo "scale=3; $total/1024/1024" | bc) GB"
-  } | sort -rnk 2
+  echo "total $(echo "scale=3; $total/1048576" | bc) GiB"
+  } | sort -rnk 2 | column -t
+}
+
+# Log the estimate of memory taken by processes per user.
+log-memory-per-user() {
+  [[ -z "$1" ]] && { echo "Provide log file name."; return 1; }
+  logfile="$1"
+  interval=10
+  while true; do
+    echo
+    date +"%F_%H-%M-%S"
+    get-memory-per-user
+    sleep $interval
+  done >> "$logfile"
 }
