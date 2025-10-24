@@ -89,5 +89,5 @@ debug-o2-compile() {
 # Find runtime error messages in an execution log.
 debug-o2-run() {
   [ "$1" ] || { echo "Provide a log file"; return 1; }
-  grep -n -e "\\[ERROR\\]" -e "\\[FATAL\\]" -e "segmentation" -e "Segmentation" -e "SEGMENTATION" -e "command not found" -e "Program crashed" -e "Error:" -e "Error in " -e "\\[WARN\\]" -e "Warning in " "$1"
+  grep -n -e "\\[ERROR\\]" -e "\\[FATAL\\]" -e "\\[CRITICAL\\]" -e "segmentation" -e "Segmentation" -e "SEGMENTATION" -e "command not found" -e "Program crashed" -e "Error:" -e "Error in " -e "\\[WARN\\]" -e "Warning in " "$1"
 }
