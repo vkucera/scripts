@@ -96,7 +96,7 @@ get-user-processes() {
 get-user-memory() {
   [[ -z "$1" ]] && { echo "Provide username."; return 1; }
   user="$1"
-  ps S -U "$user" --no-headers -o rss | awk '{m+=$1} END{print m}'
+  ps S -u "$user" --no-headers -o pss | awk '{m+=$1} END{print m}'
 }
 
 # Get the estimate of memory taken by processes per user.
@@ -106,11 +106,11 @@ get-memory-per-user() {
   for u in $(ps -e --no-headers -o user | sort -u); do
     m=$(get-user-memory "$u")
     if [[ $m -gt 0 ]]; then
-      echo "$u $(echo "scale=3; $m/1048576" | bc) GiB"
+      echo "$u $m $(echo "scale=3; $m/1048576" | bc) GiB"
       total=$((total + m))
     fi
   done
-  echo "total $(echo "scale=3; $total/1048576" | bc) GiB"
+  echo "total $total $(echo "scale=3; $total/1048576" | bc) GiB"
   } | sort -rnk 2 | column -t
 }
 
