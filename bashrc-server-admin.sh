@@ -58,7 +58,7 @@ disk() {
 # Show list of home directories inactive in the last N days
 # $1 is the minimum number of inactive days N
 inactive-users() {
-  [ "$1" ] || { echo "Provide a number of days"; return; }
+  [ "$1" ] || { echo "Provide a number of days"; return 1; }
   for u in $(get-users | sort); do
     [ "$(sudo find "/home/$u" -mtime -"$1" -print -quit | wc -l)" -eq 0 ] && echo "$u"
   done
@@ -67,18 +67,30 @@ inactive-users() {
 # Show list of home directories inactive in the last N days, sorted by size
 # $1 is the minimum number of inactive days N
 inactive-users-size() {
-  [ "$1" ] || { echo "Provide a number of days"; return; }
+  [ "$1" ] || { echo "Provide a number of days"; return 1; }
   readarray -t list_users < <(inactive-users "$1")
   echo "${list_users[@]}"
   cd /home && sudo du -sc --si "${list_users[@]}" | sort -h
   cd - || exit
 }
 
-# Show N processes taking the most memory.
+# Check whether there is at least frac_min of total memory available.
+memory-ok() {
+  [ "$1" ] || { echo "Provide the minimum memory fraction"; return 1; }
+  frac_min="$1"
+  return "$(free | grep Mem | awk -v frac_min="$frac_min" '{print ($7 < $2 * frac_min) ? 1 : 0}')";
+}
+
+# Show n_proc processes taking the most memory.
 get-big-processes() {
   n_proc=10
   [ "$1" ] && { n_proc=$1; }
-  ps -e S -o user,pid,start,%cpu,%mem,rss,comm --sort=-rss | head -n $((n_proc + 1))
+  ps S -e -o user:20,pid,%cpu,rss,comm,start --sort=-rss | head -n $((n_proc + 1))
+}
+
+# Show the process taking the most memory for each user.
+get-big-processes-per-user() {
+  ps S -e -o user:20,pid,%cpu,rss,comm,start --sort=-rss | awk '{if (NR == 1) {print $0, "RSS [GiB]"} else {if (!($1 in m)) {m[$1] = 1; print $0, $4/1048576}}}'
 }
 
 # Get the number of processes per user and open htop for each user.
@@ -92,37 +104,36 @@ get-user-processes() {
   done
 }
 
-# Get the estimate of memory taken by the user.
+# Get the memory taken by a given user.
+# Run with 'sudo bash -c "source bashrc-server-admin.sh && get-user-memory <user>"'.
 get-user-memory() {
   [[ -z "$1" ]] && { echo "Provide username."; return 1; }
   user="$1"
-  ps S -u "$user" --no-headers -o pss | awk '{m+=$1} END{print m}'
+  ps S -u "$user" --no-headers -o pss | awk '{m += $1} END{print m, m/1048576, "GiB"}'
 }
 
-# Get the estimate of memory taken by processes per user.
+# Get the memory taken by each user.
+# Run with 'sudo bash -c "source bashrc-server-admin.sh && get-memory-per-user"'.
+# Faster than "sudo smem -ukta -c "user pss" -r pss".
 get-memory-per-user() {
-  total=0
-  {
-  for u in $(ps -e --no-headers -o user | sort -u); do
-    m=$(get-user-memory "$u")
-    if [[ $m -gt 0 ]]; then
-      echo "$u $m $(echo "scale=3; $m/1048576" | bc) GiB"
-      total=$((total + m))
-    fi
-  done
-  echo "total $total $(echo "scale=3; $total/1048576" | bc) GiB"
-  } | sort -rnk 2 | column -t
+  ps S -e --no-headers -o user:20,pss | awk '{m[$1] += $2; m["total"] += $2} END{for(u in m) {print u, m[u], m[u]/1048576, "GiB"}}' | sort -rnk 2 | column -t
 }
 
-# Log the estimate of memory taken by processes per user.
+# Log the memory taken by each user.
+# Run with 'sudo bash -c "source bashrc-server-admin.sh && log-memory-per-user <file> [interval] [mem_min]"'.
 log-memory-per-user() {
   [[ -z "$1" ]] && { echo "Provide log file name."; return 1; }
   logfile="$1"
   interval=10
+  [ "$2" ] && { interval="$2"; }
+  mem_min="0.2"
+  [ "$3" ] && { mem_min="$3"; }
+  echo "Logging user memory in \"$logfile\" every $interval s (min. memory fraction $mem_min)..."
   while true; do
     echo
     date +"%F_%H-%M-%S"
     get-memory-per-user
-    sleep $interval
+    memory-ok "$mem_min" || { echo; date +"%F_%H-%M-%S"; get-big-processes-per-user; } >> "big_processes_$logfile"
+    sleep "$interval"
   done >> "$logfile"
 }
