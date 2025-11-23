@@ -19,19 +19,6 @@ alias update-firmware="fwupdmgr get-devices && fwupdmgr refresh --force && fwupd
 
 # utils
 
-# Upgrade packages.
-update-sw() {
-  set -euo pipefail
-  set -o xtrace
-  sudo apt update
-  sudo apt upgrade
-  sudo apt autoremove
-  sudo apt clean
-  readarray -t packages < <(dpkg --get-selections | awk '$2 == "deinstall" {print $1}')
-  { [[ ${#packages[@]} -gt 0 ]] && sudo dpkg --purge "${packages[@]}"; }
-  set +o xtrace
-}
-
 # Monitor speed of internet connection.
 speed() {
   [[ -z "$(which speedometer)" ]] && { echo "speedometer not found"; return 1; }
