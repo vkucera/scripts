@@ -13,6 +13,9 @@ alias q='exit'
 alias time='/usr/bin/time -f "time real: %E\ntime real: %e s\ntime kernel: %S s\ntime user: %U s\nCPU: %P\nMemory (max): %M kB\nExit code: %x"'
 alias htopme='htop -u $USER'
 alias du-si='du --si'
+alias power-off-disk="udisksctl power-off -b"
+alias time='/usr/bin/time -f "time real: %E\ntime real: %e s\ntime kernel: %S s\ntime user: %U s\nCPU: %P\nMemory (max): %M kB\nExit code: %x"'
+alias update-firmware="fwupdmgr get-devices && fwupdmgr refresh --force && fwupdmgr get-updates && fwupdmgr update"
 
 # utils
 
