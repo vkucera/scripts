@@ -4,7 +4,7 @@
 
 # environment
 
-eval "$(direnv hook "$SHELL")"
+[[ -n "$(which direnv)" ]] && eval "$(direnv hook "$SHELL")"
 export PATH="$HOME/.local/bin:$PATH"
 export PYTHONUSERBASE="$HOME/user_python"
 export PATH="$PYTHONUSERBASE/bin:$PATH"
@@ -19,7 +19,7 @@ alias update-firmware="fwupdmgr get-devices && fwupdmgr refresh --force && fwupd
 
 # utils
 
-# Upgrade packages
+# Upgrade packages.
 update-sw() {
   set -euo pipefail
   set -o xtrace
@@ -32,19 +32,15 @@ update-sw() {
   set +o xtrace
 }
 
+# Monitor speed of internet connection.
 speed() {
+  [[ -z "$(which speedometer)" ]] && { echo "speedometer not found"; return 1; }
   device=$(ifconfig -s | grep BMRU | awk '{print $1}')
-  if [[ -z "$device" ]]; then
-    echo "No device found"
-    return 1
-  fi
-  if [[ -n "$(which speedometer)" ]]; then
-    speedometer -r "$device" -t "$device"
-  else
-    echo "speedometer not found"
-  fi
+  [[ -z "$device" ]] && { echo "No device found"; return 1; }
+  speedometer -r "$device" -t "$device"
 }
 
+# Check write speed.
 test-write() {
   [ "$1" ] || { echo "Provide a number"; return 1; }
   n_max=$1
