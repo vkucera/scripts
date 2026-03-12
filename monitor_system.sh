@@ -15,7 +15,7 @@ FILE_BASE="$HOME/monitor-logs"
 FOOTER_WARNING="**:warning: $HOSTNAME warning** @all\n"
 
 # Maximum disk usage (%)
-DISK_LIMIT_SOFT=97
+DISK_LIMIT_SOFT=95
 DISK_LIMIT_HARD=98
 
 # Minimum available memory fraction (%)
