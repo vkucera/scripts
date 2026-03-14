@@ -12,7 +12,7 @@ DISKS="$4"
 FILE_BASE="$HOME/monitor-logs"
 [[ ! -d "$FILE_BASE" ]] && { mkdir -p "$FILE_BASE"; }
 
-FOOTER_WARNING="**:warning: $HOSTNAME warning**\n"
+TITLE_WARNING="**:warning: $HOSTNAME warning**\n"
 
 # Maximum disk usage (%)
 DISK_LIMIT_SOFT=95
@@ -44,7 +44,7 @@ check_memory() {
     memory_min=$((MEMORY_LIMIT_HARD * memory_total / 100))
     if ((memory_available < memory_min)); then
       [[ -f "${logfile}" ]] && return 0
-      message="${FOOTER_WARNING}@all Available memory is almost **EXHAUSTED**: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
+      message="${TITLE_WARNING}@all Available memory is almost **EXHAUSTED**: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
       notify=1
       date +"%F_%H-%M-%S" > "${logfile}"
     else
@@ -53,7 +53,7 @@ check_memory() {
   else
     memory_min=$((MEMORY_LIMIT_SOFT * memory_total /100))
     if ((memory_available < memory_min)); then
-      message="${FOOTER_WARNING}@all Available memory is low: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
+      message="${TITLE_WARNING}@all Available memory is low: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
       notify=1
     fi
   fi
@@ -75,14 +75,14 @@ check_disk() {
     mkdir -p "${FILE_BASE}/${path}"
     if ((disk_use > DISK_LIMIT_HARD)); then
       [[ -f "${logfile}" ]] && return 0
-      notify_mattermost "${FOOTER_WARNING}@all Disk in ${path} is **FULL**: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
+      notify_mattermost "${TITLE_WARNING}@all Disk in ${path} is **FULL**: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
       date +"%F_%H-%M-%S" > "${logfile}"
     else
       rm -f "${logfile}"
     fi
   else
     if ((disk_use > DISK_LIMIT_SOFT)); then
-      notify_mattermost "${FOOTER_WARNING}@all Disk usage in ${path} is high: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
+      notify_mattermost "${TITLE_WARNING}@all Disk usage in ${path} is high: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
     fi
   fi
 }
@@ -93,7 +93,7 @@ check_processes() {
   [[ "$(echo -e "$table" | wc -l)" -eq "2" ]] && return 0
   local users
   users="$(echo -e "$table" | awk '(NR > 1 && $0 != "") {users[$1] = 1} END{for (u in users) {printf "@%s ", u}}')"
-  local header="${FOOTER_WARNING}Suspicious old processes were found. Please check. ${users}\n\n\`\`\`\n"
+  local header="${TITLE_WARNING}Suspicious old processes were found. Please check. ${users}\n\n\`\`\`\n"
   local footer="\`\`\`"
   notify_mattermost "${header}${table}${footer}"
 }
