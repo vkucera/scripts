@@ -12,7 +12,7 @@ DISKS="$4"
 FILE_BASE="$HOME/monitor-logs"
 [[ ! -d "$FILE_BASE" ]] && { mkdir -p "$FILE_BASE"; }
 
-FOOTER_WARNING="**:warning: $HOSTNAME warning** @all\n"
+FOOTER_WARNING="**:warning: $HOSTNAME warning**\n"
 
 # Maximum disk usage (%)
 DISK_LIMIT_SOFT=95
@@ -24,6 +24,8 @@ MEMORY_LIMIT_HARD="5"
 
 notify_mattermost() {
   local text="$1"
+  # echo -e "$text"
+  # return 0
   local WEBHOOK
   WEBHOOK=$(cat "${TOKEN_FILE}")
   local COMMAND="curl -X POST -H 'Content-type: application/json' -d '{\"text\":\"${text}\"}' ${WEBHOOK}"
@@ -41,8 +43,8 @@ check_memory() {
     local logfile="${FILE_BASE}/${path}/memory_full"
     memory_min=$((MEMORY_LIMIT_HARD * memory_total / 100))
     if ((memory_available < memory_min)); then
-      [[ -f "${logfile}" ]] && { return 0; }
-      message="${FOOTER_WARNING}Available memory is almost **EXHAUSTED**: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
+      [[ -f "${logfile}" ]] && return 0
+      message="${FOOTER_WARNING}@all Available memory is almost **EXHAUSTED**: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
       notify=1
       date +"%F_%H-%M-%S" > "${logfile}"
     else
@@ -51,7 +53,7 @@ check_memory() {
   else
     memory_min=$((MEMORY_LIMIT_SOFT * memory_total /100))
     if ((memory_available < memory_min)); then
-      message="${FOOTER_WARNING}Available memory is low: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
+      message="${FOOTER_WARNING}@all Available memory is low: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
       notify=1
     fi
   fi
@@ -73,16 +75,27 @@ check_disk() {
     mkdir -p "${FILE_BASE}/${path}"
     if ((disk_use > DISK_LIMIT_HARD)); then
       [[ -f "${logfile}" ]] && return 0
-      notify_mattermost "${FOOTER_WARNING}Disk in ${path} is **FULL**: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
+      notify_mattermost "${FOOTER_WARNING}@all Disk in ${path} is **FULL**: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
       date +"%F_%H-%M-%S" > "${logfile}"
     else
       rm -f "${logfile}"
     fi
   else
     if ((disk_use > DISK_LIMIT_SOFT)); then
-      notify_mattermost "${FOOTER_WARNING}Disk usage in ${path} is high: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
+      notify_mattermost "${FOOTER_WARNING}@all Disk usage in ${path} is high: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
     fi
   fi
+}
+
+check_processes() {
+  local table
+  table="$(ps -e -o uid,user,lstart,rss,%cpu,state,comm -D "%Y%m%d" --sort=lstart | awk -v now="$(date +"%Y%m%d")" '{if (NR == 1) {$1=""; print} else if ($1 >= 1000 && $1 <= 60000 && $3 < now - 1 && ($4 > 1048576 || $5 > 10 || $6 == "T" || $6 == "Z")) {$1=""; print}}' | column -t | awk '{printf "%s\\n", $0}')"
+  [[ "$(echo -e "$table" | wc -l)" -eq "2" ]] && return 0
+  local users
+  users="$(echo -e "$table" | awk '(NR > 1 && $0 != "") {users[$1] = 1} END{for (u in users) {printf "@%s ", u}}')"
+  local header="${FOOTER_WARNING}Suspicious old processes were found. Please check. ${users}\n\n\`\`\`\n"
+  local footer="\`\`\`"
+  notify_mattermost "${header}${table}${footer}"
 }
 
 case "${CHECK}" in
@@ -93,5 +106,8 @@ case "${CHECK}" in
   ;;
   "memory")
     check_memory
+  ;;
+  "processes")
+    check_processes
   ;;
 esac

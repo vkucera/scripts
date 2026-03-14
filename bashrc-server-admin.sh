@@ -93,6 +93,12 @@ get-big-processes-per-user() {
   ps S -e -o user:20,pid,%cpu,rss,comm,start --sort=-rss | awk '{if (NR == 1) {print $0, "RSS [GiB]"} else {if (!($1 in m)) {m[$1] = 1; print $0, $4/1048576}}}'
 }
 
+# Get suspicious processes.
+# Condition: Started before yesterday and (RSS > 1 GB or CPU > 10 % or is stopped or is zombie).
+get-suspicious-processes() {
+  ps -e -o uid,user,lstart,rss,%cpu,state,comm -D "%Y%m%d" --sort=lstart | awk -v now="$(date +"%Y%m%d")" '{if (NR == 1) {$1=""; print} else if ($1 >= 1000 && $1 <= 60000 && $3 < now - 1 && ($4 > 1048576 || $5 > 10 || $6 == "T" || $6 == "Z")) {$1=""; print}}' | column -t
+}
+
 # Get the number of processes per user and open htop for each user.
 get-user-processes() {
   for u in $(get-users); do
