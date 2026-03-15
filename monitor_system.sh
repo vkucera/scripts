@@ -25,7 +25,7 @@ DISK_LIMIT_HARD=98
 MEMORY_LIMIT_SOFT="10"
 MEMORY_LIMIT_HARD="5"
 
-notify() {
+notify_mattermost() {
   local text="$1"
   # echo -e "$text"
   # return 0
@@ -64,7 +64,7 @@ check_memory() {
     local text="${message}\n"
     text+="\n| user | usage [GiB] |\n|---|---|\n"
     text+="$(ps S -e --no-headers -o user:20,pss | awk '{m[$1] += $2; m["total"] += $2} END{for(u in m) {print u, m[u]}}' | sort -rnk 2 | head -5 | awk '{printf "| %s | %.0f |\\n", $1, $2/1048576}')"
-    notify "$text"
+    notify_mattermost "$text"
   fi
 }
 
@@ -78,14 +78,14 @@ check_disk() {
     mkdir -p "${FILE_BASE}/${path}"
     if ((disk_use > DISK_LIMIT_HARD)); then
       [[ -f "${logfile}" ]] && return 0
-      notify "${TITLE_WARNING}@all Disk in ${path} is **FULL**: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
+      notify_mattermost "${TITLE_WARNING}@all Disk in ${path} is **FULL**: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
       date +"%F_%H-%M-%S" > "${logfile}"
     else
       rm -f "${logfile}"
     fi
   else
     if ((disk_use > DISK_LIMIT_SOFT)); then
-      notify "${TITLE_WARNING}@all Disk usage in ${path} is high: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
+      notify_mattermost "${TITLE_WARNING}@all Disk usage in ${path} is high: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
     fi
   fi
 }
@@ -98,7 +98,7 @@ check_processes() {
   users="$(echo -e "$table" | awk '(NR > 1 && $0 != "") {users[$1] = 1} END{for (u in users) {printf "@%s ", u}}')"
   local header="${TITLE_WARNING}Suspicious old processes were found. Please check. ${users}\n\n\`\`\`\n"
   local footer="\`\`\`"
-  notify "${header}${table}${footer}"
+  notify_mattermost "${header}${table}${footer}"
 }
 
 restart() {
@@ -111,20 +111,20 @@ restart() {
   before_restart=$((now < time_restart))
   if [[ ! -f "${logfile}" ]]; then
     [[ $before_restart -eq 0 ]] && return 0
-    notify "${TITLE_WARNING}@all Restart of the system has been scheduled for ${TIME_RESTART}."
+    notify_mattermost "${TITLE_WARNING}@all Restart of the system has been scheduled for ${TIME_RESTART}."
     echo "${TIME_RESTART}" > "${logfile}"
     return 0
   fi
   if [[ $before_restart -eq 1 ]]; then
     if ((time_restart - now <= 60 * TIME_REMINDER_RESTART)) && (($(wc -l < "${logfile}") == 1)); then
-      notify "${TITLE_WARNING}@all Restart of the system imminent at ${TIME_RESTART}."
+      notify_mattermost "${TITLE_WARNING}@all Restart of the system imminent at ${TIME_RESTART}."
       echo "${TIME_RESTART}" >> "${logfile}"
     fi
   elif ((time_restart <= $(date +"%s" -d "$(uptime -s)"))); then
-    notify "${TITLE_WARNING}@all Restart of the system at ${TIME_RESTART} was successful."
+    notify_mattermost "${TITLE_WARNING}@all Restart of the system at ${TIME_RESTART} was successful."
     rm -f "${logfile}"
   else
-    notify "${TITLE_WARNING}@all Restarting the system now."
+    notify_mattermost "${TITLE_WARNING}@all Restarting the system now."
     systemctl reboot
   fi
 }
