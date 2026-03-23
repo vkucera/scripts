@@ -14,6 +14,7 @@ FILE_BASE="$HOME/monitor-logs"
 
 TITLE_WARNING="**:warning: $HOSTNAME warning**\n"
 
+# Scheduled restart
 TIME_RESTART="2026-03-15 08:00:00"
 TIME_REMINDER_RESTART="10" # minutes before restart to send a reminder
 
@@ -38,56 +39,63 @@ notify_mattermost() {
 check_memory() {
   local memory_total
   local memory_available
-  local message=""
+  local memory_min
+  local message
+  local logfile
+  local report_once=1
   memory_total="$(free | grep Mem | awk '{print $2}')"
   memory_available="$(free | grep Mem | awk '{print $7}')"
-  local notify=0
   if [[ "$HARD" -eq 1  ]]; then
-    local logfile="${FILE_BASE}/memory_full"
+    logfile="${FILE_BASE}/memory_full"
     memory_min=$((MEMORY_LIMIT_HARD * memory_total / 100))
-    if ((memory_available < memory_min)); then
-      [[ -f "${logfile}" ]] && return 0
-      message="${TITLE_WARNING}@all Available memory is almost **EXHAUSTED**: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
-      notify=1
-      date +"%F_%H-%M-%S" > "${logfile}"
-    else
-      rm -f "${logfile}"
-    fi
+    message="${TITLE_WARNING}@all Available memory is almost **EXHAUSTED**: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
   else
-    memory_min=$((MEMORY_LIMIT_SOFT * memory_total /100))
-    if ((memory_available < memory_min)); then
-      message="${TITLE_WARNING}@all Available memory is low: $((memory_available/1048576)) GiB (threshold $((memory_min/1048576)) GiB)"
-      notify=1
-    fi
+    logfile="${FILE_BASE}/memory_getting_full"
+    memory_min=$((MEMORY_LIMIT_SOFT * memory_total / 100))
+    message="${TITLE_WARNING}@all Available memory is low: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
   fi
-  if [[ $notify -eq 1 ]]; then
-    local text="${message}\n"
-    text+="\n| user | usage [GiB] |\n|---|---|\n"
-    text+="$(ps S -e --no-headers -o user:20,pss | awk '{m[$1] += $2; m["total"] += $2} END{for(u in m) {print u, m[u]}}' | sort -rnk 2 | head -5 | awk '{printf "| %s | %.0f |\\n", $1, $2/1048576}')"
-    notify_mattermost "$text"
+  if ((memory_available >= memory_min)); then
+    rm -f "${logfile}"
+    return 0
   fi
+  if [[ -f "${logfile}" && "$report_once" -eq 1 ]]; then
+    return 0
+  fi
+  date +"%F_%H-%M-%S" > "${logfile}"
+  local text="${message}\n"
+  text+="\n| user | usage [GiB] |\n|---|---|\n"
+  text+="$(ps S -e --no-headers -o user:20,pss | awk '{m[$1] += $2; m["total"] += $2} END{for(u in m) {print u, m[u]}}' | sort -rnk 2 | head -5 | awk '{printf "| %s | %.0f |\\n", $1, $2 / 1048576}')"
+  notify_mattermost "$text"
 }
 
 check_disk() {
   local path="$1"
-  local disk_use
-  disk_use=$(df "${path}" | awk '{print $5}' | tail -n1)
-  disk_use=${disk_use%'%'}
+  local space_used
+  local space_max
+  local message
+  local logfile
+  local report_once=1
+  space_used=$(df "${path}" | awk '{print $5}' | tail -n1)
+  space_used=${space_used%'%'}
   if [[ "$HARD" -eq 1 ]]; then
-    local logfile="${FILE_BASE}/${path}/disk_full"
-    mkdir -p "${FILE_BASE}/${path}"
-    if ((disk_use > DISK_LIMIT_HARD)); then
-      [[ -f "${logfile}" ]] && return 0
-      notify_mattermost "${TITLE_WARNING}@all Disk in ${path} is **FULL**: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
-      date +"%F_%H-%M-%S" > "${logfile}"
-    else
-      rm -f "${logfile}"
-    fi
+    logfile="${FILE_BASE}/${path}/disk_full"
+    space_max=$DISK_LIMIT_HARD
+    message="${TITLE_WARNING}@all Disk in ${path} is **FULL**: ${space_used} % (threshold ${space_max} %)"
   else
-    if ((disk_use > DISK_LIMIT_SOFT)); then
-      notify_mattermost "${TITLE_WARNING}@all Disk usage in ${path} is high: ${disk_use} % (threshold ${DISK_LIMIT_SOFT} %)"
-    fi
+    logfile="${FILE_BASE}/${path}/disk_getting_full"
+    space_max=$DISK_LIMIT_SOFT
+    message="${TITLE_WARNING}@all Disk usage in ${path} is high: ${space_used} % (threshold ${space_max} %)"
   fi
+  if ((space_used <= space_max)); then
+    rm -f "${logfile}"
+    return 0
+  fi
+  if [[ -f "${logfile}" && "$report_once" -eq 1 ]]; then
+    return 0
+  fi
+  mkdir -p "${FILE_BASE}/${path}"
+  date +"%F_%H-%M-%S" > "${logfile}"
+  notify_mattermost "$message"
 }
 
 check_processes() {
