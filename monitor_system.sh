@@ -48,11 +48,11 @@ check_memory() {
   if [[ "$HARD" -eq 1  ]]; then
     logfile="${FILE_BASE}/memory_full"
     memory_min=$((MEMORY_LIMIT_HARD * memory_total / 100))
-    message="${TITLE_WARNING}@all Available memory is almost **EXHAUSTED**: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
+    message="${TITLE_WARNING}Available memory is almost **EXHAUSTED**: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
   else
     logfile="${FILE_BASE}/memory_getting_full"
     memory_min=$((MEMORY_LIMIT_SOFT * memory_total / 100))
-    message="${TITLE_WARNING}@all Available memory is low: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
+    message="${TITLE_WARNING}Available memory is low: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
   fi
   if ((memory_available >= memory_min)); then
     rm -f "${logfile}"
@@ -62,9 +62,12 @@ check_memory() {
     return 0
   fi
   date +"%F_%H-%M-%S" > "${logfile}"
+  table="$(ps S -e --no-headers -o user:20,pss | awk '{m[$1] += $2; m["total"] += $2} END{for(u in m) if (m[u] > 10 * 1048576) {print u, m[u]}}' | sort -rnk 2 | awk '{printf "| %s | %.0f |\\n", $1, $2 / 1048576}')"
+  users="$(echo -e "$table" | awk '(NR > 1 && $0 != "") {users[$2] = 1} END{for (u in users) {printf "@%s ", u}}')"
   local text="${message}\n"
+  text+="Please check. ${users}\n"
   text+="\n| user | usage [GiB] |\n|---|---|\n"
-  text+="$(ps S -e --no-headers -o user:20,pss | awk '{m[$1] += $2; m["total"] += $2} END{for(u in m) {print u, m[u]}}' | sort -rnk 2 | head -5 | awk '{printf "| %s | %.0f |\\n", $1, $2 / 1048576}')"
+  text+="$table"
   notify_mattermost "$text"
 }
 
