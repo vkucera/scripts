@@ -48,11 +48,11 @@ check_memory() {
   if [[ "$HARD" -eq 1  ]]; then
     logfile="${FILE_BASE}/memory_full"
     memory_min=$((MEMORY_LIMIT_HARD * memory_total / 100))
-    message="${TITLE_WARNING}Available memory is almost **EXHAUSTED**: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
+    message="${TITLE_WARNING}:nuke: Available memory is almost **EXHAUSTED**: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
   else
     logfile="${FILE_BASE}/memory_getting_full"
     memory_min=$((MEMORY_LIMIT_SOFT * memory_total / 100))
-    message="${TITLE_WARNING}Available memory is low: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
+    message="${TITLE_WARNING}:doomguy: Available memory is low: $((memory_available / 1048576)) GiB (threshold $((memory_min / 1048576)) GiB)"
   fi
   if ((memory_available >= memory_min)); then
     rm -f "${logfile}"
@@ -107,7 +107,7 @@ check_processes() {
   [[ "$(echo -e "$table" | wc -l)" -eq "2" ]] && return 0
   local users
   users="$(echo -e "$table" | awk '(NR > 1 && $0 != "") {users[$1] = 1} END{for (u in users) {printf "@%s ", u}}')"
-  local header="${TITLE_WARNING}Suspicious old processes were found. Please check. ${users}\n\n\`\`\`\n"
+  local header="${TITLE_WARNING}:zombie: Suspicious old processes were found. Please check. ${users}\n\n\`\`\`\n"
   local footer="\`\`\`"
   notify_mattermost "${header}${table}${footer}"
 }
