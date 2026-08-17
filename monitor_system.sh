@@ -15,7 +15,7 @@ FILE_BASE="$HOME/monitor-logs"
 TITLE_WARNING="**:warning: $HOSTNAME warning**\n"
 
 # Scheduled restart
-TIME_RESTART="2026-03-15 08:00:00"
+TIME_RESTART="2026-08-13 08:00:00"
 TIME_REMINDER_RESTART="10" # minutes before restart to send a reminder
 
 # Maximum disk usage (%)
@@ -103,7 +103,7 @@ check_disk() {
 
 check_processes() {
   local table
-  table="$(ps -e -o uid,user,lstart,rss,%cpu,state,comm -D "%Y%m%d" --sort=lstart | awk -v now="$(date +"%Y%m%d")" '{if (NR == 1) {$1=""; print} else if ($1 >= 1000 && $1 <= 60000 && $3 < now - 1 && ($4 > 1048576 || $5 > 10 || $6 == "T" || $6 == "Z")) {$1=""; print}}' | grep -Ev " (tmux)" | column -t | awk '{printf "%s\\n", $0}')"
+  table="$(ps -e -o uid,user,lstart,rss,%cpu,state,comm -D "%Y%m%d" --sort=lstart | awk -v now="$(date +"%Y%m%d")" '{if (NR == 1) {$1=""; print} else if ($1 >= 1000 && $1 <= 60000 && $3 < now - 1 && ($4 > 1048576 || $5 > 10 || $6 == "T" || $6 == "Z")) {$1=""; print}}' | grep -Ev ' (monalisa|tmux)' | column -t | awk '{printf "%s\\n", $0}')"
   [[ "$(echo -e "$table" | wc -l)" -eq "2" ]] && return 0
   local users
   users="$(echo -e "$table" | awk '(NR > 1 && $0 != "") {users[$1] = 1} END{for (u in users) {printf "@%s ", u}}')"
