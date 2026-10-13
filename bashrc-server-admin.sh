@@ -78,7 +78,7 @@ inactive-users-size() {
 memory-ok() {
   [ "$1" ] || { echo "Provide the minimum memory fraction"; return 1; }
   frac_min="$1"
-  return "$(free | grep Mem | awk -v frac_min="$frac_min" '{print ($7 < $2 * frac_min) ? 1 : 0}')";
+  return "$(free | awk -v frac_min="$frac_min" 'FNR == 2 {print ($7 < $2 * frac_min) ? 1 : 0}')";
 }
 
 # Show n_proc processes taking the most memory.
