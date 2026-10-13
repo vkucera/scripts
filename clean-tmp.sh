@@ -14,7 +14,7 @@ sudo apt clean
 echo "Moving files to trash bin"
 gio trash -f \
 "$HOME"/.aliensh_history \
-"$HOME"/.bash_history \
+"$HOME"/.bash_history* \
 "$HOME"/.cache/doublecmd/thumbnails/* \
 "$HOME"/.cache/mintinstall/screenshots/* \
 "$HOME"/.cache/thumbnails/*/*.png \
